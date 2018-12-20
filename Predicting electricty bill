@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Dec 20 10:13:01 2018
+
+@author: sarasharick
+"""
+
+# Importing the libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
+#Build the dataframe from scratch
+electricity = pd.DataFrame()
+                           
+electricity['Meter_read_date'] = ['2017/08/15', '2017/09/14', '2017/10/16', '2017/11/14', '2017/12/15', '2018/01/16', '2018/02/14', '2018/04/17', '2018/05/15', '2018/06/14', '2018/07/16', '2018/08/14', '2018/09/13', '2018/10/15', '2018/11/14', '2018/12/13']     
+
+electricity['#Billing_days'] = [30, 32, 29, 31, 32, 29, 29, 33, 28, 30, 32, 29, 30, 32, 30, 29]
+
+electricity['Usage(kWh)'] = [638, 524, 198, 206, 497, 272, 231, 298, 370, 586, 990, 858, 960, 611, 297, 197]
+
+electricity['Average_daily_use'] = [21, 16, 7, 7, 16, 9, 8, 9, 13, 20, 31, 30, 32, 19, 10, 7]
+
+electricity['Average_daily_temp'] = [73.84, 73.38, 57.29, 46.2, 32.93, 40.13, 46.93, 47.23, 63.43, 73.27, 80.73, 80.71, 79.97, 73.97, 54.16, 41.7]
+
+electricity['Bill$'] = [196.17, 183.41, 30.94, 31.89, 66.36, 39.82, 34.96, 42.66, 50.87, 76.02, 123.08, 107.37, 119.61, 78.82, 42.18, 30.42]
+
+#Visualization 1
+fig, ax = plt.subplots()
+ax.plot(electricity['Meter_read_date'], electricity['Average_daily_use'])
+
+ax.set(xlabel='Meter read date', ylabel='avg daily use',
+       title='My electricity use') 
+ax.grid()
+plt.show()
+
+#Visualization 2
+fig, ax = plt.subplots()
+ax.plot(electricity['Meter_read_date'], electricity['Bill$'])
+
+ax.set(xlabel='Meter read date', ylabel='Bill$',
+       title='My electricity use') 
+ax.grid()
+plt.show()
+
+#Drop outlier rows
+electricity.drop([0, 1, 4], inplace=True)
+"""These rows were dropped due to anomolies in usage and billing, as can be seen by running the two visualizations above"""
+
+#Visualization 3
+g = sns.PairGrid(electricity)
+g.map(plt.scatter)
+
+#Visualization 4
+g = sns.PairGrid(electricity)
+g.map_upper(plt.scatter)
+g.map_lower(sns.kdeplot)
+g.map_diag(sns.kdeplot, lw=3, legend=False)
+
+#Visualization 5
+plt.scatter(x = electricity['Average_daily_temp'], y = electricity['Average_daily_use'], color='blue')
+plt.title('Average use by Temp')
+plt.xlabel('Average Daily Temp')
+plt.ylabel('Average Daily Use')
+plt.show()
+
+#Visualization 6
+plt.scatter(x = electricity['Average_daily_use'], y = electricity['Bill$'], color='blue')
+plt.title('Average use by Bill')
+plt.xlabel('Average Daily Usage')
+plt.ylabel('Bill Amount')
+plt.show()
+
+#Visualization 1a
+fig, ax = plt.subplots()
+ax.plot(electricity['Meter_read_date'], electricity['Average_daily_use'])
+
+ax.set(xlabel='Meter read date', ylabel='avg daily use',
+       title='My electricity use') 
+ax.grid()
+plt.show()
+
+#Visualization 2a
+fig, ax = plt.subplots()
+ax.plot(electricity['Meter_read_date'], electricity['Bill$'])
+
+ax.set(xlabel='Meter read date', ylabel='Bill$',
+       title='My electricity use') 
+ax.grid()
+plt.show()
+
+## Correlation Matrix
+sns.set(style="white")
+
+# Compute the correlation matrix
+corr = electricity.corr()
+
+#Predicting Average daily use based on Average daily temp
+X = electricity.iloc[:, 4:5].values #Average daily temp column
+y = electricity.iloc[:, 3:4].values #Average daily use column
+
+# Fitting Linear Regression to the dataset
+from sklearn.linear_model import LinearRegression
+lin_reg = LinearRegression()
+lin_reg.fit(X, y)
+
+# Fitting Polynomial Regression to the dataset
+from sklearn.preprocessing import PolynomialFeatures
+poly_reg = PolynomialFeatures(degree = 4)
+X_poly = poly_reg.fit_transform(X)
+poly_reg.fit(X_poly, y)
+lin_reg_2 = LinearRegression()
+lin_reg_2.fit(X_poly, y)
+
+# Visualising the Linear Regression results
+plt.scatter(X, y, color = 'red')
+plt.plot(X, lin_reg.predict(X), color = 'blue')
+plt.title('Average use (Linear Regression)')
+plt.xlabel('Average daily temp')
+plt.ylabel('Average daily use')
+plt.show()
+
+# Visualising the Polynomial Regression results
+plt.scatter(X, y, color = 'red')
+plt.plot(X, lin_reg_2.predict(poly_reg.fit_transform(X)), color = 'blue')
+plt.title('Avg use (Polynomial Regression)')
+plt.xlabel('Avg daily temp')
+plt.ylabel('Avg daily use')
+plt.show()
+
+# Visualising the Polynomial Regression results (for higher resolution and smoother curve)
+X_grid = np.arange(min(X), max(X), 0.1)
+X_grid = X_grid.reshape((len(X_grid), 1))
+plt.scatter(X, y, color = 'red')
+plt.plot(X_grid, lin_reg_2.predict(poly_reg.fit_transform(X_grid)), color = 'blue')
+plt.title('Avg use (Polynomial Regression)')
+plt.xlabel('Avg daily temp')
+plt.ylabel('Avg daily use')
+plt.show()
+
+# Predicting a new result with Linear Regression
+lin_reg.predict(55) #input a new temperature; output a predicted daily use
+
+# Predicting a new result with Polynomial Regression
+lin_reg_2.predict(poly_reg.fit_transform(55))#input a new temperature; output a predicted daily use
+
+#Predicting Bill based on Average daily use
+X2 = electricity.iloc[:, 3:4].values #Average daily use column
+y2 = electricity.iloc[:, 5].values   # Bill Column
+
+# Fitting Linear Regression to the dataset
+from sklearn.linear_model import LinearRegression
+lin_regB = LinearRegression()
+lin_regB.fit(X2, y2)
+
+# Fitting Polynomial Regression to the dataset
+from sklearn.preprocessing import PolynomialFeatures
+poly_regB = PolynomialFeatures(degree = 4)
+X2_poly = poly_regB.fit_transform(X2)
+poly_regB.fit(X2_poly, y2)
+lin_reg_2B = LinearRegression()
+lin_reg_2B.fit(X2_poly, y2)
+
+# Visualising the Linear Regression results
+plt.scatter(X2, y2, color = 'red')
+plt.plot(X2, lin_regB.predict(X2), color = 'blue')
+plt.title('Bill (Linear Regression)')
+plt.xlabel('Average use')
+plt.ylabel('Bill')
+plt.show()
+
+# Visualising the Polynomial Regression results
+plt.scatter(X2, y2, color = 'red')
+plt.plot(X2, lin_reg_2B.predict(poly_regB.fit_transform(X2)), color = 'blue')
+plt.title('Bill (Polynomial Regression)')
+plt.xlabel('Avg use')
+plt.ylabel('Bill')
+plt.show()
+
+# Visualising the Polynomial Regression results (for higher resolution and smoother curve)
+X2_grid = np.arange(min(X2), max(X2), 0.1)
+X2_grid = X2_grid.reshape((len(X2_grid), 1))
+plt.scatter(X2, y2, color = 'red')
+plt.plot(X2_grid, lin_reg_2B.predict(poly_regB.fit_transform(X2_grid)), color = 'blue')
+plt.title('Bill (Polynomial Regression)')
+plt.xlabel('Avg use')
+plt.ylabel('Bill')
+plt.show()
+
+# Predicting a new result with Linear Regression
+lin_regB.predict(8.84) #Input a new daily use; output a predicted bill amount
+
+# Predicting a new result with Polynomial Regression
+lin_reg_2B.predict(poly_regB.fit_transform(8.84)) #Input a new daily use; output a predicted bill amount
