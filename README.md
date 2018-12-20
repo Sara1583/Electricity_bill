@@ -1,2 +1,2 @@
 # Electricity_bill
-Some easy code to predict a utility bill based on past metrics
+The code here is nearly identical to the code in the gas_bill regression. This code builds the dataframe from scratch (as opposed to starting with a csv file) and removes some rows based on anomolies in billing and usage. 
